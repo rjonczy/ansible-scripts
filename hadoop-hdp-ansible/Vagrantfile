@@ -14,6 +14,7 @@ hadoop_hosts = {
 
 Vagrant.configure("2") do |config|
 
+  # use the same key for each machine
   config.ssh.insert_key = false
   config.vm.boot_timeout = 60 
 
@@ -21,6 +22,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "ctrl" do |ctrl|
     
     ctrl.vm.box = "centos/7"
+    # ctrl.vm.box = "ubuntu/trusty64"
     ctrl.vm.hostname = "ctrl.jonczy.lan"
     ctrl.vm.network "private_network", ip: "192.168.50.50"
 
@@ -31,31 +33,32 @@ Vagrant.configure("2") do |config|
 
     # configure keys to be used 
     # http://ermaker.github.io/blog/2015/11/18/change-insecure-key-to-my-own-key-on-vagrant.html
-    # ctrl.ssh.private_key_path = ["~/.ssh/id_rsa", "~/.vagrant.d/insecure_private_key"]
-    # ctrl.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/authorized_keys"
+    ctrl.ssh.private_key_path = ["~/.ssh/id_rsa", "~/.vagrant.d/insecure_private_key"]
+    ctrl.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/authorized_keys"
+    ctrl.ssh.forward_agent = true
 
     # bootstrap control machine for ansible
     ctrl.vm.provision :shell, path: "bootstrap-ctrl.sh"
 
-    # ctrl.vm.synced_folder "../hadoop-hdp-ansible", "/vagrant_data"
+    ctrl.vm.synced_folder "../hadoop-hdp-ansible", "/vagrant_data"
 
   end
 
-  # machines for hadoop ecosystem
-  hadoop_hosts.each do |name, ip|
-    config.vm.define name do |machine|
-      machine.vm.box = "centos/7"
-      machine.vm.hostname = "%s.jonczy.lan" % name
-      machine.vm.network :private_network, ip: ip
+  # # machines for hadoop ecosystem
+  # hadoop_hosts.each do |name, ip|
+  #   config.vm.define name do |machine|
+  #     machine.vm.box = "centos/7"
+  #     machine.vm.hostname = "%s.jonczy.lan" % name
+  #     machine.vm.network :private_network, ip: ip
 
-      machine.vm.provider "virtualbox" do |v|
-          v.name = name
-          v.cpus = 2
-          v.customize ["modifyvm", :id, "--memory", 2048]
-      end
+  #     machine.vm.provider "virtualbox" do |v|
+  #       v.name = name
+  #       v.memory = 2048
+  #       v.cpus = 2
+  #     end
 
-    end
-  end
+  #   end
+  # end
 
 
 
